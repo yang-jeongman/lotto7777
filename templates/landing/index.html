@@ -1,0 +1,592 @@
+{% extends "base.html" %}
+{% load lotto_tags humanize %}
+
+{% block content %}
+
+<!-- ============================================ -->
+<!-- SECTION 1: Hero / 현재 회차 당첨 결과        -->
+<!-- ============================================ -->
+<section id="hero" class="relative min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-lotto-purple-dark via-lotto-purple to-lotto-blue px-4 overflow-hidden">
+    <!-- 파티클 배경 -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="particle particle-1"></div>
+        <div class="particle particle-2"></div>
+        <div class="particle particle-3"></div>
+        <div class="particle particle-4"></div>
+        <div class="particle particle-5"></div>
+        <div class="particle particle-6"></div>
+    </div>
+
+    <div class="relative z-10 text-center max-w-lg mx-auto pt-16">
+        <!-- 로고 -->
+        <div class="mb-6">
+            <span class="text-5xl font-black tracking-tight">
+                <span class="text-lotto-gold">L7</span><span class="text-white/60">*</span><span class="text-lotto-gold">7</span>
+            </span>
+            <p class="text-white/50 text-sm mt-1">행운을 함께 만드는 커뮤니티</p>
+        </div>
+
+        <!-- 회차 정보 -->
+        <div class="inline-block px-4 py-1 rounded-full bg-white/10 border border-white/20 mb-4">
+            <span class="text-lotto-gold text-sm font-semibold">제{{ current_draw.draw_no }}회 당첨결과</span>
+            <span class="text-white/40 text-xs ml-2">{{ current_draw.draw_date }}</span>
+        </div>
+
+        <!-- 당첨 번호 -->
+        <div class="flex justify-center items-center gap-2 my-6 flex-wrap">
+            {% for num in current_draw.winning_numbers %}
+            <div class="ball-enter w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shadow-lg"
+                 style="background: {{ num|ball_color }}; color: {{ num|ball_text_color }}; animation-delay: {{ forloop.counter0 }}00ms;">
+                {{ num }}
+            </div>
+            {% endfor %}
+            <span class="text-2xl text-white/40 mx-1">+</span>
+            <div class="ball-enter w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shadow-lg ring-2 ring-lotto-gold ring-offset-2 ring-offset-lotto-purple-dark"
+                 style="background: {{ current_draw.bonus_number|ball_color }}; color: {{ current_draw.bonus_number|ball_text_color }}; animation-delay: 600ms;">
+                {{ current_draw.bonus_number }}
+            </div>
+        </div>
+
+        <!-- 당첨금 -->
+        <div class="mb-6">
+            <p class="text-3xl font-bold text-lotto-gold-light">
+                1등 {{ current_draw.first_prize|intcomma_kr }}원
+            </p>
+            <p class="text-white/50 text-sm mt-1">
+                {{ current_draw.first_prize_winners }}명 당첨 &middot; 총 판매 {{ current_draw.total_sales|intcomma_kr }}원
+            </p>
+        </div>
+
+        <!-- 카운트다운 -->
+        <div class="mb-8">
+            <p class="text-white/40 text-xs mb-3">다음 추첨까지</p>
+            <div class="flex justify-center gap-3" id="countdown">
+                <div class="countdown-box rounded-xl px-3 py-2 min-w-[60px] text-center">
+                    <div class="text-2xl font-bold text-lotto-gold" id="cd-days">0</div>
+                    <div class="text-[10px] text-white/40">일</div>
+                </div>
+                <div class="countdown-box rounded-xl px-3 py-2 min-w-[60px] text-center">
+                    <div class="text-2xl font-bold text-lotto-gold" id="cd-hours">0</div>
+                    <div class="text-[10px] text-white/40">시간</div>
+                </div>
+                <div class="countdown-box rounded-xl px-3 py-2 min-w-[60px] text-center">
+                    <div class="text-2xl font-bold text-lotto-gold" id="cd-minutes">0</div>
+                    <div class="text-[10px] text-white/40">분</div>
+                </div>
+                <div class="countdown-box rounded-xl px-3 py-2 min-w-[60px] text-center">
+                    <div class="text-2xl font-bold text-lotto-gold" id="cd-seconds">0</div>
+                    <div class="text-[10px] text-white/40">초</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA -->
+        <a href="#ai-recommend" class="inline-block px-8 py-4 bg-lotto-gold text-lotto-blue-dark font-bold rounded-full text-lg shadow-lg shadow-lotto-gold/30 hover:bg-lotto-gold-light transition-all duration-300 hover:scale-105 active:scale-95">
+            AI 추천번호 확인하기
+        </a>
+    </div>
+
+    <!-- 스크롤 인디케이터 -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+        <svg class="w-6 h-6 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+        </svg>
+    </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SECTION 2: AI 번호 추천                      -->
+<!-- ============================================ -->
+<section id="ai-recommend" class="py-16 px-4 bg-gradient-to-b from-lotto-blue-dark to-lotto-purple-dark/50">
+    <div class="max-w-lg mx-auto section-fade">
+        <div class="text-center mb-8">
+            <h2 class="text-2xl font-bold">
+                <span class="text-lotto-gold">AI</span>가 분석한 추천 번호
+            </h2>
+            <p class="text-white/40 text-sm mt-1">매주 토요일 자동 업데이트</p>
+        </div>
+
+        <div class="space-y-4">
+            {% for rec in ai_recommendations %}
+            <div class="glass-card rounded-2xl p-5">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-sm font-semibold text-white/80">{{ rec.set_name }}</h3>
+                    <span class="text-xs text-white/40">{{ rec.strategy }}</span>
+                </div>
+
+                <!-- 추천 번호 -->
+                <div class="flex justify-center gap-2 mb-4">
+                    {% for num in rec.numbers %}
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-md"
+                         style="background: {{ num|ball_color }}; color: {{ num|ball_text_color }};">
+                        {{ num }}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- 신뢰도 바 -->
+                <div class="flex items-center gap-3">
+                    <span class="text-xs text-white/40 whitespace-nowrap">신뢰도</span>
+                    <div class="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                        <div class="confidence-bar h-full rounded-full bg-gradient-to-r from-lotto-gold to-lotto-gold-light"
+                             style="width: {{ rec.confidence }}%;"></div>
+                    </div>
+                    <span class="text-xs font-semibold text-lotto-gold">{{ rec.confidence }}%</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="text-center mt-6">
+            <a href="#" class="text-sm text-lotto-gold hover:text-lotto-gold-light transition-colors">
+                더 많은 추천 보기 &rarr;
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SECTION 3: 번호별 출현 분석 (Hot/Cold)       -->
+<!-- ============================================ -->
+<section id="analysis" class="py-16 px-4 bg-lotto-blue-dark">
+    <div class="max-w-lg mx-auto section-fade">
+        <div class="text-center mb-6">
+            <h2 class="text-2xl font-bold">번호별 출현 분석</h2>
+            <p class="text-white/40 text-sm mt-1">빨강 = 빈출 | 파랑 = 미출</p>
+        </div>
+
+        <!-- 기간 탭 -->
+        <div class="flex justify-center gap-2 mb-6">
+            <button class="tab-btn px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-lotto-gold text-lotto-blue-dark" data-period="10" onclick="switchPeriod(10)">최근 10회</button>
+            <button class="tab-btn px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-white/10 text-white/60 hover:bg-white/20" data-period="30" onclick="switchPeriod(30)">최근 30회</button>
+            <button class="tab-btn px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-white/10 text-white/60 hover:bg-white/20" data-period="100" onclick="switchPeriod(100)">최근 100회</button>
+        </div>
+
+        <!-- 45번호 그리드 -->
+        <div class="grid grid-cols-9 gap-1.5 max-w-sm mx-auto" id="number-grid">
+            {% for num_data in number_stats.items %}
+            <div class="num-cell aspect-square rounded-lg flex items-center justify-center text-xs font-bold cursor-pointer relative"
+                 data-num="{{ num_data.0 }}"
+                 data-freq10="{{ num_data.1.freq_10 }}"
+                 data-freq30="{{ num_data.1.freq_30 }}"
+                 data-freq100="{{ num_data.1.freq_100 }}"
+                 style="background: {{ num_data.1.freq_10|intcomma_kr }};"
+                 title="{{ num_data.0 }}번: {{ num_data.1.freq_10 }}회 출현">
+                <span class="relative z-10">{{ num_data.0 }}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        <p class="text-center text-white/30 text-xs mt-4">번호를 탭하면 상세 통계를 볼 수 있습니다</p>
+    </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SECTION 4: 3단계 서비스 구조 (핵심)          -->
+<!-- ============================================ -->
+<section id="service" class="py-16 px-4 bg-gradient-to-b from-lotto-blue-dark to-gray-950">
+    <div class="max-w-5xl mx-auto section-fade">
+        <div class="text-center mb-8">
+            <h2 class="text-2xl font-bold">3단계 서비스 구조</h2>
+            <p class="text-white/40 text-sm mt-1">로또의 모든 것, L7*7에서</p>
+        </div>
+
+        <!-- 수평 스크롤 (모바일) / 3컬럼 그리드 (데스크톱) -->
+        <div class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 -mx-4 px-4 md:grid md:grid-cols-3 md:overflow-visible md:mx-0 md:px-0 scrollbar-hide">
+            {% for stage in service_stages %}
+            <div class="stage-card min-w-[85vw] md:min-w-0 snap-center flex-shrink-0 rounded-2xl p-6 bg-gradient-to-br {{ stage.gradient }} border border-white/15 shadow-2xl relative overflow-hidden">
+                <!-- 스테이지 번호 워터마크 -->
+                <div class="absolute top-4 right-4 text-8xl font-black text-white/5 leading-none">
+                    0{{ stage.stage }}
+                </div>
+
+                <div class="relative z-10">
+                    <!-- 아이콘 & 제목 -->
+                    <div class="text-5xl mb-4">{{ stage.icon }}</div>
+                    <div class="inline-block px-3 py-0.5 rounded-full bg-white/15 text-[10px] text-white/70 mb-2">
+                        STAGE {{ stage.stage }}
+                    </div>
+                    <h3 class="text-xl font-bold mb-1">{{ stage.title }}</h3>
+                    <p class="text-white/60 text-sm mb-5">{{ stage.subtitle }}</p>
+
+                    <!-- 기능 리스트 -->
+                    <ul class="space-y-3">
+                        {% for feature in stage.features %}
+                        <li class="flex items-start gap-2.5">
+                            <svg class="w-5 h-5 text-lotto-gold-light flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <div>
+                                <span class="text-sm font-medium">{{ feature.text }}</span>
+                                <span class="text-xs text-white/40 block">{{ feature.desc }}</span>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- 스크롤 인디케이터 (모바일만) -->
+        <div class="flex justify-center gap-2 mt-4 md:hidden">
+            <span class="stage-dot w-2 h-2 rounded-full bg-lotto-gold transition-all"></span>
+            <span class="stage-dot w-2 h-2 rounded-full bg-white/30 transition-all"></span>
+            <span class="stage-dot w-2 h-2 rounded-full bg-white/30 transition-all"></span>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SECTION 5: 행운의 명당 판매점                -->
+<!-- ============================================ -->
+<section id="stores" class="py-16 px-4 bg-gray-950">
+    <div class="max-w-lg mx-auto section-fade">
+        <div class="text-center mb-8">
+            <h2 class="text-2xl font-bold">🏆 행운의 명당 판매점</h2>
+            <p class="text-white/40 text-sm mt-1">전국 1등 당첨 최다 배출점</p>
+        </div>
+
+        <div class="space-y-3">
+            {% for store in lucky_stores %}
+            <div class="glass-card rounded-xl p-4 flex items-center gap-4">
+                <!-- 순위 -->
+                <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0
+                    {% if store.rank == 1 %}bg-lotto-gold text-lotto-blue-dark{% elif store.rank == 2 %}bg-gray-300 text-gray-700{% elif store.rank == 3 %}bg-amber-700 text-white{% else %}bg-white/10 text-white/60{% endif %}">
+                    {{ store.rank }}
+                </div>
+
+                <!-- 정보 -->
+                <div class="flex-1 min-w-0">
+                    <h4 class="font-semibold text-sm truncate">{{ store.name }}</h4>
+                    <p class="text-white/40 text-xs truncate">{{ store.address }}</p>
+                </div>
+
+                <!-- 통계 -->
+                <div class="text-right flex-shrink-0">
+                    <div class="text-lotto-gold font-bold text-sm">{{ store.total_winners }}명</div>
+                    <div class="text-white/30 text-[10px]">1등 당첨</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="text-center mt-6">
+            <span class="inline-block px-4 py-2 bg-white/5 border border-white/10 rounded-full text-xs text-white/40">
+                🗺️ 전체 지도 보기 (준비 중)
+            </span>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SECTION 6: 회원 등급 시스템                  -->
+<!-- ============================================ -->
+<section id="levels" class="py-16 px-4 bg-gradient-to-b from-gray-950 to-lotto-blue-dark">
+    <div class="max-w-lg mx-auto section-fade">
+        <div class="text-center mb-8">
+            <h2 class="text-2xl font-bold">레벨 & 리워드</h2>
+            <p class="text-white/40 text-sm mt-1">활동할수록 혜택이 커집니다</p>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {% for level in user_levels %}
+            <div class="glass-card rounded-xl p-4 text-center hover:border-lotto-gold/30 transition-all {% if forloop.first %}ring-1 ring-lotto-gold/30{% endif %}">
+                <div class="text-4xl mb-2">{{ level.icon }}</div>
+                <h4 class="font-bold text-sm" style="color: {{ level.color }};">{{ level.name }}</h4>
+                <p class="text-white/40 text-xs mt-1">{{ level.requirement }}</p>
+                <div class="mt-3 pt-3 border-t border-white/5">
+                    <p class="text-white/50 text-[10px]">{{ level.benefit }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SECTION 7: 오늘의 콘텐츠                     -->
+<!-- ============================================ -->
+<section id="daily" class="py-16 px-4 bg-lotto-blue-dark">
+    <div class="max-w-lg mx-auto section-fade">
+        <div class="text-center mb-8">
+            <h2 class="text-2xl font-bold">오늘의 행운</h2>
+            <p class="text-white/40 text-sm mt-1">매일 바뀌는 행운의 메시지</p>
+        </div>
+
+        <!-- 오늘의 행운번호 -->
+        <div class="glass-card rounded-2xl p-6 mb-4">
+            <h3 class="text-center text-sm text-white/50 mb-4">🎱 오늘의 행운 번호</h3>
+            <div class="flex justify-center gap-2.5" id="daily-numbers">
+                {% for num in daily_numbers %}
+                <div class="flip-card w-11 h-11" style="animation-delay: {{ forloop.counter0 }}00ms;">
+                    <div class="flip-card-inner w-full h-full relative">
+                        <!-- 앞면 (물음표) -->
+                        <div class="flip-card-front rounded-full bg-white/10 text-white/30 font-bold text-lg">?</div>
+                        <!-- 뒷면 (번호) -->
+                        <div class="flip-card-back rounded-full font-bold text-sm shadow-md"
+                             style="background: {{ num|ball_color }}; color: {{ num|ball_text_color }};">
+                            {{ num }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <button onclick="revealDailyNumbers()" id="reveal-btn" class="block mx-auto mt-4 px-6 py-2 bg-lotto-gold/20 text-lotto-gold text-sm rounded-full hover:bg-lotto-gold/30 transition-colors">
+                터치하여 번호 확인
+            </button>
+        </div>
+
+        <!-- 행운의 한마디 -->
+        <div class="glass-card rounded-2xl p-6 text-center">
+            <div class="text-3xl mb-3">🍀</div>
+            <p class="text-lg font-medium text-white/80 italic">"{{ daily_quote }}"</p>
+            <p class="text-white/30 text-xs mt-3">— 오늘의 행운 메시지</p>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SECTION 8: 커뮤니티 미리보기                 -->
+<!-- ============================================ -->
+<section id="community" class="py-16 px-4 bg-gradient-to-b from-lotto-blue-dark to-gray-950">
+    <div class="max-w-lg mx-auto section-fade">
+        <div class="text-center mb-8">
+            <h2 class="text-2xl font-bold">커뮤니티</h2>
+            <p class="text-white/40 text-sm mt-1">함께하면 행운도 커집니다</p>
+        </div>
+
+        <!-- 인기 게시글 -->
+        <div class="space-y-3 mb-6">
+            {% for post in community_posts %}
+            <div class="glass-card rounded-xl p-4 hover:border-white/20 transition-all cursor-pointer">
+                <div class="flex items-start gap-3">
+                    <!-- 카테고리 뱃지 -->
+                    <span class="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-semibold
+                        {% if post.category == 'story' %}bg-green-500/20 text-green-400
+                        {% elif post.category == 'group' %}bg-blue-500/20 text-blue-400
+                        {% else %}bg-purple-500/20 text-purple-400{% endif %}">
+                        {% if post.category == 'story' %}후기{% elif post.category == 'group' %}모집{% else %}분석{% endif %}
+                    </span>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-sm font-medium truncate">{{ post.title }}</h4>
+                        <div class="flex items-center gap-3 mt-1.5 text-white/30 text-xs">
+                            <span>{{ post.author }}</span>
+                            <span>👁 {{ post.views|intcomma_kr }}</span>
+                            <span>💬 {{ post.comments }}</span>
+                            <span>{{ post.time_ago }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- 공동구매 모임 티저 -->
+        <div class="bg-gradient-to-r from-blue-800/50 to-indigo-900/50 rounded-2xl p-6 border border-blue-500/20 text-center">
+            <div class="text-3xl mb-2">🤝</div>
+            <h3 class="font-bold">공동구매 모임</h3>
+            <p class="text-white/50 text-sm mt-1 mb-4">소액으로 다양한 조합을 구매하세요</p>
+            <div class="flex justify-center gap-4 mb-4 text-sm">
+                <div>
+                    <div class="text-2xl font-bold text-lotto-gold">24</div>
+                    <div class="text-white/30 text-xs">활성 모임</div>
+                </div>
+                <div class="w-px bg-white/10"></div>
+                <div>
+                    <div class="text-2xl font-bold text-lotto-gold">187</div>
+                    <div class="text-white/30 text-xs">참여 회원</div>
+                </div>
+                <div class="w-px bg-white/10"></div>
+                <div>
+                    <div class="text-2xl font-bold text-lotto-gold">12</div>
+                    <div class="text-white/30 text-xs">당첨 모임</div>
+                </div>
+            </div>
+            <a href="#" class="inline-block px-6 py-2.5 bg-lotto-gold text-lotto-blue-dark font-semibold rounded-full text-sm hover:bg-lotto-gold-light transition-colors">
+                모임 참여하기
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SECTION 9: OMR 인쇄 서비스 (CTA)             -->
+<!-- ============================================ -->
+<section id="omr" class="py-16 px-4 bg-gray-950">
+    <div class="max-w-lg mx-auto section-fade text-center">
+        <div class="bg-gradient-to-br from-lotto-purple to-lotto-blue rounded-3xl p-8 border border-white/10 shadow-2xl relative overflow-hidden">
+            <!-- 배경 장식 -->
+            <div class="absolute top-0 right-0 w-32 h-32 bg-lotto-gold/10 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-0 left-0 w-24 h-24 bg-lotto-purple-light/10 rounded-full blur-2xl"></div>
+
+            <div class="relative z-10">
+                <div class="text-4xl mb-4">🖨️</div>
+                <h2 class="text-2xl font-bold mb-2">OMR 인쇄 대행</h2>
+                <p class="text-white/60 text-sm mb-6">
+                    웹에서 번호 선택 → 인쇄된 OMR 용지 수령 → 판매점에서 바로 제출
+                </p>
+
+                <div class="grid grid-cols-3 gap-3 mb-6">
+                    <div class="bg-white/10 rounded-xl p-3">
+                        <div class="text-lg font-bold text-lotto-gold">500원</div>
+                        <div class="text-[10px] text-white/40">1장</div>
+                    </div>
+                    <div class="bg-white/10 rounded-xl p-3">
+                        <div class="text-lg font-bold text-lotto-gold">2,000원</div>
+                        <div class="text-[10px] text-white/40">5장 (20% 할인)</div>
+                    </div>
+                    <div class="bg-white/10 rounded-xl p-3">
+                        <div class="text-lg font-bold text-lotto-gold">3,500원</div>
+                        <div class="text-[10px] text-white/40">10장 (30% 할인)</div>
+                    </div>
+                </div>
+
+                <a href="#" class="inline-block px-8 py-3 bg-lotto-gold text-lotto-blue-dark font-bold rounded-full text-lg hover:bg-lotto-gold-light transition-all hover:scale-105 active:scale-95">
+                    지금 주문하기
+                </a>
+                <p class="text-white/30 text-xs mt-3">준비 중 &middot; 서비스 오픈 시 알림 받기</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ============================================
+// 카운트다운 타이머
+// ============================================
+function updateCountdown() {
+    const nextDraw = new Date('{{ current_draw.next_draw_date }}');
+    const now = new Date();
+    const diff = nextDraw - now;
+
+    if (diff <= 0) {
+        document.getElementById('cd-days').textContent = '0';
+        document.getElementById('cd-hours').textContent = '0';
+        document.getElementById('cd-minutes').textContent = '0';
+        document.getElementById('cd-seconds').textContent = '0';
+        return;
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    document.getElementById('cd-days').textContent = days;
+    document.getElementById('cd-hours').textContent = String(hours).padStart(2, '0');
+    document.getElementById('cd-minutes').textContent = String(minutes).padStart(2, '0');
+    document.getElementById('cd-seconds').textContent = String(seconds).padStart(2, '0');
+}
+updateCountdown();
+setInterval(updateCountdown, 1000);
+
+// ============================================
+// 네비바 스크롤 효과
+// ============================================
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+    if (window.scrollY > 80) {
+        navbar.classList.add('navbar-scrolled');
+    } else {
+        navbar.classList.remove('navbar-scrolled');
+    }
+});
+
+// ============================================
+// 모바일 메뉴
+// ============================================
+function toggleMobileMenu() {
+    document.getElementById('mobile-menu').classList.toggle('hidden');
+}
+function closeMobileMenu() {
+    document.getElementById('mobile-menu').classList.add('hidden');
+}
+
+// ============================================
+// 섹션 페이드인 (Intersection Observer)
+// ============================================
+const fadeElements = document.querySelectorAll('.section-fade');
+const fadeObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+        }
+    });
+}, { threshold: 0.1 });
+fadeElements.forEach(el => fadeObserver.observe(el));
+
+// ============================================
+// 3단계 카드 스크롤 인디케이터
+// ============================================
+const stageCards = document.querySelectorAll('.stage-card');
+const stageDots = document.querySelectorAll('.stage-dot');
+
+if (stageCards.length && stageDots.length) {
+    const stageObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const index = [...stageCards].indexOf(entry.target);
+                stageDots.forEach((dot, i) => {
+                    dot.classList.toggle('bg-lotto-gold', i === index);
+                    dot.classList.toggle('bg-white/30', i !== index);
+                });
+            }
+        });
+    }, { threshold: 0.6 });
+    stageCards.forEach(card => stageObserver.observe(card));
+}
+
+// ============================================
+// 번호 그리드 - 기간별 전환
+// ============================================
+function getHeatColor(freq, maxFreq) {
+    const ratio = Math.min(freq / maxFreq, 1.0);
+    if (ratio > 0.6) {
+        return `rgba(239, 68, 68, ${0.3 + ratio * 0.5})`;
+    } else if (ratio > 0.3) {
+        return `rgba(234, 179, 8, ${0.3 + ratio * 0.4})`;
+    } else {
+        return `rgba(59, 130, 246, ${0.3 + ratio * 0.4})`;
+    }
+}
+
+function switchPeriod(period) {
+    // 탭 스타일 변경
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (parseInt(btn.dataset.period) === period) {
+            btn.className = 'tab-btn px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-lotto-gold text-lotto-blue-dark';
+        } else {
+            btn.className = 'tab-btn px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-white/10 text-white/60 hover:bg-white/20';
+        }
+    });
+
+    // 그리드 색상 업데이트
+    const maxFreqs = { 10: 4, 30: 9, 100: 23 };
+    const maxFreq = maxFreqs[period] || 4;
+
+    document.querySelectorAll('.num-cell').forEach(cell => {
+        const freq = parseInt(cell.dataset[`freq${period}`]) || 0;
+        cell.style.background = getHeatColor(freq, maxFreq);
+        cell.title = `${cell.dataset.num}번: ${freq}회 출현`;
+    });
+}
+
+// 초기 그리드 색상 설정
+switchPeriod(10);
+
+// ============================================
+// 오늘의 행운번호 플립
+// ============================================
+function revealDailyNumbers() {
+    const cards = document.querySelectorAll('.flip-card');
+    cards.forEach((card, i) => {
+        setTimeout(() => card.classList.add('revealed'), i * 200);
+    });
+    document.getElementById('reveal-btn').style.display = 'none';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,143 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="L7*7 - AI 기반 로또 번호 추천 & 커뮤니티 플랫폼. 행운을 함께 만드는 글로벌 커뮤니티">
+    <meta property="og:title" content="L7*7 - 행운을 함께 만드는 커뮤니티">
+    <meta property="og:description" content="AI가 분석한 이번 주 추천 번호를 확인하세요">
+    <meta property="og:type" content="website">
+    <title>{% block title %}L7*7 - 행운을 함께 만드는 커뮤니티{% endblock %}</title>
+
+    <!-- Tailwind CSS (빌드됨) -->
+    <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
+
+    <!-- Pretendard Font -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+
+    <style>
+        body { font-family: 'Pretendard Variable', system-ui, sans-serif; }
+
+        /* 스크롤바 숨김 */
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* 파티클 애니메이션 */
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(217, 119, 6, 0.3);
+            animation: float-particle linear infinite;
+        }
+        .particle-1 { width: 6px; height: 6px; top: 20%; left: 15%; animation-duration: 8s; }
+        .particle-2 { width: 4px; height: 4px; top: 40%; left: 75%; animation-duration: 12s; animation-delay: -3s; }
+        .particle-3 { width: 8px; height: 8px; top: 60%; left: 45%; animation-duration: 10s; animation-delay: -5s; }
+        .particle-4 { width: 5px; height: 5px; top: 80%; left: 25%; animation-duration: 9s; animation-delay: -2s; }
+        .particle-5 { width: 7px; height: 7px; top: 30%; left: 85%; animation-duration: 11s; animation-delay: -7s; }
+        .particle-6 { width: 3px; height: 3px; top: 70%; left: 60%; animation-duration: 7s; animation-delay: -4s; }
+
+        @keyframes float-particle {
+            0% { transform: translateY(0) translateX(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) translateX(30px); opacity: 0; }
+        }
+
+        /* 볼 등장 애니메이션 */
+        .ball-enter {
+            animation: ball-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            opacity: 0;
+        }
+        @keyframes ball-pop {
+            0% { transform: scale(0); opacity: 0; }
+            70% { transform: scale(1.15); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* 섹션 페이드인 */
+        .section-fade {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .section-fade.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 카운트다운 박스 */
+        .countdown-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        /* 글래스모피즘 카드 */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        /* 네비바 스크롤 효과 */
+        .navbar-scrolled {
+            background: rgba(15, 23, 42, 0.95) !important;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 번호 그리드 셀 */
+        .num-cell {
+            transition: all 0.3s ease;
+        }
+        .num-cell:hover {
+            transform: scale(1.1);
+            z-index: 10;
+        }
+
+        /* 신뢰도 바 애니메이션 */
+        .confidence-bar {
+            transition: width 1s ease-out;
+        }
+
+        /* 플립 카드 */
+        .flip-card {
+            perspective: 600px;
+        }
+        .flip-card-inner {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flip-card.revealed .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            backface-visibility: hidden;
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .flip-card-back {
+            transform: rotateY(180deg);
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-lotto-blue-dark text-white antialiased">
+    {% block navbar %}
+    {% include "components/_navbar.html" %}
+    {% endblock %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    {% include "components/_footer.html" %}
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
