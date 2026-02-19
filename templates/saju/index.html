@@ -1,0 +1,539 @@
+{% extends "base.html" %}
+{% load lotto_tags %}
+
+{% block title %}사주팔자 맞춤 행운번호 - L7*7{% endblock %}
+
+{% block content %}
+
+<!-- ============================================ -->
+<!-- HERO: 사주팔자 소개                           -->
+<!-- ============================================ -->
+<section class="relative min-h-[50vh] flex flex-col items-center justify-center bg-gradient-to-br from-indigo-950 via-purple-900 to-lotto-blue px-4 pt-20 pb-12 overflow-hidden">
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="particle particle-1"></div>
+        <div class="particle particle-3"></div>
+        <div class="particle particle-5"></div>
+    </div>
+    <div class="relative z-10 text-center max-w-lg mx-auto">
+        <div class="text-6xl mb-4">🧿</div>
+        <h1 class="text-3xl font-black mb-2">
+            <span class="text-lotto-gold">사주팔자</span> 맞춤 행운번호
+        </h1>
+        <p class="text-white/50 text-sm leading-relaxed">
+            생년월일시를 입력하면 AI가 사주를 분석하여<br>
+            나에게 딱 맞는 로또 번호를 추천합니다
+        </p>
+    </div>
+</section>
+
+<!-- ============================================ -->
+<!-- 입력 폼                                       -->
+<!-- ============================================ -->
+<section id="saju-form-section" class="py-12 px-4 bg-lotto-blue-dark">
+    <div class="max-w-md mx-auto">
+        <div class="glass-card rounded-2xl p-6">
+            <h2 class="text-lg font-bold text-center mb-6">생년월일시 입력</h2>
+
+            <form id="saju-form" class="space-y-5">
+                {% csrf_token %}
+
+                <!-- 생년월일 -->
+                <div>
+                    <label class="block text-sm text-white/60 mb-2">생년월일</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <select id="birth-year" class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2.5 text-white text-sm focus:border-lotto-gold focus:outline-none">
+                                <option value="" class="bg-gray-800">년도</option>
+                            </select>
+                        </div>
+                        <div>
+                            <select id="birth-month" class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2.5 text-white text-sm focus:border-lotto-gold focus:outline-none">
+                                <option value="" class="bg-gray-800">월</option>
+                            </select>
+                        </div>
+                        <div>
+                            <select id="birth-day" class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2.5 text-white text-sm focus:border-lotto-gold focus:outline-none">
+                                <option value="" class="bg-gray-800">일</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 태어난 시간 -->
+                <div>
+                    <label class="block text-sm text-white/60 mb-2">태어난 시간 <span class="text-white/30">(선택)</span></label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <select id="birth-hour" class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2.5 text-white text-sm focus:border-lotto-gold focus:outline-none">
+                            <option value="" class="bg-gray-800">시</option>
+                            <option value="-1" class="bg-gray-800">모름</option>
+                        </select>
+                        <select id="birth-minute" class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2.5 text-white text-sm focus:border-lotto-gold focus:outline-none">
+                            <option value="0" class="bg-gray-800">0분</option>
+                            <option value="15" class="bg-gray-800">15분</option>
+                            <option value="30" class="bg-gray-800">30분</option>
+                            <option value="45" class="bg-gray-800">45분</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 성별 -->
+                <div>
+                    <label class="block text-sm text-white/60 mb-2">성별</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="gender" value="M" class="hidden peer" checked>
+                            <div class="peer-checked:bg-lotto-gold peer-checked:text-lotto-blue-dark bg-white/10 border border-white/20 rounded-lg py-2.5 text-center text-sm font-medium transition-all peer-checked:border-lotto-gold">
+                                남성
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="gender" value="F" class="hidden peer">
+                            <div class="peer-checked:bg-lotto-gold peer-checked:text-lotto-blue-dark bg-white/10 border border-white/20 rounded-lg py-2.5 text-center text-sm font-medium transition-all peer-checked:border-lotto-gold">
+                                여성
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 제출 버튼 -->
+                <button type="submit" id="submit-btn" class="w-full py-3.5 bg-lotto-gold text-lotto-blue-dark font-bold rounded-full text-lg shadow-lg shadow-lotto-gold/30 hover:bg-lotto-gold-light transition-all hover:scale-[1.02] active:scale-95">
+                    나의 행운번호 확인하기
+                </button>
+            </form>
+        </div>
+
+        <p class="text-center text-white/20 text-xs mt-4">
+            입력 정보는 저장되지 않으며, 번호 추천에만 사용됩니다
+        </p>
+    </div>
+</section>
+
+<!-- ============================================ -->
+<!-- 로딩 상태                                     -->
+<!-- ============================================ -->
+<section id="loading-section" class="hidden py-20 px-4 bg-lotto-blue-dark">
+    <div class="max-w-md mx-auto text-center">
+        <div class="text-5xl mb-4 animate-pulse">🔮</div>
+        <h3 class="text-xl font-bold mb-2">사주를 분석하고 있습니다...</h3>
+        <p class="text-white/40 text-sm">AI가 당신의 사주팔자를 읽고 있습니다</p>
+        <div class="mt-6 flex justify-center gap-1">
+            <div class="w-2 h-2 bg-lotto-gold rounded-full animate-bounce" style="animation-delay: 0ms;"></div>
+            <div class="w-2 h-2 bg-lotto-gold rounded-full animate-bounce" style="animation-delay: 150ms;"></div>
+            <div class="w-2 h-2 bg-lotto-gold rounded-full animate-bounce" style="animation-delay: 300ms;"></div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================ -->
+<!-- 결과 표시                                     -->
+<!-- ============================================ -->
+<section id="result-section" class="hidden py-12 px-4 bg-gradient-to-b from-lotto-blue-dark to-indigo-950">
+    <div class="max-w-lg mx-auto space-y-6">
+
+        <!-- 사주 차트 -->
+        <div class="glass-card rounded-2xl p-5">
+            <h3 class="text-center text-sm text-white/50 mb-4">📜 나의 사주팔자</h3>
+            <div class="grid grid-cols-4 gap-2 text-center" id="pillar-chart">
+                <!-- 헤더 -->
+                <div class="text-xs text-white/40 pb-1">시주</div>
+                <div class="text-xs text-white/40 pb-1">일주</div>
+                <div class="text-xs text-white/40 pb-1">월주</div>
+                <div class="text-xs text-white/40 pb-1">년주</div>
+                <!-- 천간 -->
+                <div id="stem-hour" class="text-2xl font-bold py-2 rounded-t-lg bg-white/5">-</div>
+                <div id="stem-day" class="text-2xl font-bold py-2 rounded-t-lg bg-white/5">-</div>
+                <div id="stem-month" class="text-2xl font-bold py-2 rounded-t-lg bg-white/5">-</div>
+                <div id="stem-year" class="text-2xl font-bold py-2 rounded-t-lg bg-white/5">-</div>
+                <!-- 지지 -->
+                <div id="branch-hour" class="text-2xl font-bold py-2 bg-white/5">-</div>
+                <div id="branch-day" class="text-2xl font-bold py-2 bg-white/5">-</div>
+                <div id="branch-month" class="text-2xl font-bold py-2 bg-white/5">-</div>
+                <div id="branch-year" class="text-2xl font-bold py-2 bg-white/5">-</div>
+                <!-- 십신 -->
+                <div id="god-hour" class="text-xs text-white/50 pt-1 rounded-b-lg bg-white/5 pb-2">-</div>
+                <div id="god-day" class="text-xs text-lotto-gold pt-1 rounded-b-lg bg-white/5 pb-2">일간</div>
+                <div id="god-month" class="text-xs text-white/50 pt-1 rounded-b-lg bg-white/5 pb-2">-</div>
+                <div id="god-year" class="text-xs text-white/50 pt-1 rounded-b-lg bg-white/5 pb-2">-</div>
+            </div>
+
+            <!-- 오행 분포 바 -->
+            <div class="mt-4 pt-4 border-t border-white/10">
+                <p class="text-xs text-white/40 mb-2">오행 분포</p>
+                <div class="flex gap-1" id="element-bars">
+                    <!-- JS에서 동적 생성 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- AI 해석 -->
+        <div class="glass-card rounded-2xl p-5">
+            <h3 class="text-sm text-white/50 mb-1">🔮 AI 운세 해석</h3>
+            <p id="result-summary" class="text-lotto-gold font-semibold text-sm mb-3"></p>
+            <p id="result-fortune" class="text-white/80 text-sm leading-relaxed mb-3"></p>
+            <div class="bg-white/5 rounded-xl p-3">
+                <p class="text-xs text-white/40 mb-1">오행 분석</p>
+                <p id="result-element-analysis" class="text-white/70 text-xs leading-relaxed"></p>
+            </div>
+        </div>
+
+        <!-- 맞춤형 로또 번호 -->
+        <div class="space-y-3" id="lucky-numbers-container">
+            <!-- JS에서 동적 생성 -->
+        </div>
+
+        <!-- 행운 메시지 -->
+        <div class="glass-card rounded-2xl p-5 text-center">
+            <div class="text-3xl mb-2">🍀</div>
+            <p id="result-message" class="text-lg font-medium text-white/80 italic"></p>
+        </div>
+
+        <!-- 다시 하기 -->
+        <div class="text-center pt-4">
+            <button onclick="resetForm()" class="px-6 py-2.5 bg-white/10 border border-white/20 rounded-full text-sm text-white/60 hover:bg-white/20 transition-all">
+                다시 분석하기
+            </button>
+            <a href="/" class="ml-3 px-6 py-2.5 bg-white/5 border border-white/10 rounded-full text-sm text-white/40 hover:bg-white/10 transition-all inline-block">
+                홈으로
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- 에러 표시 -->
+<section id="error-section" class="hidden py-20 px-4 bg-lotto-blue-dark">
+    <div class="max-w-md mx-auto text-center">
+        <div class="text-5xl mb-4">⚠️</div>
+        <h3 class="text-xl font-bold mb-2">오류가 발생했습니다</h3>
+        <p id="error-message" class="text-white/50 text-sm mb-6"></p>
+        <button onclick="resetForm()" class="px-6 py-2.5 bg-lotto-gold text-lotto-blue-dark font-semibold rounded-full text-sm">
+            다시 시도하기
+        </button>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script type="module">
+import { calculateSaju } from 'https://esm.sh/@orrery/core@0.3.0/saju';
+
+// ============================================
+// 오행 색상 매핑
+// ============================================
+const ELEMENT_COLORS = {
+    '목': { bg: '#22c55e', text: '木' },
+    '화': { bg: '#ef4444', text: '火' },
+    '토': { bg: '#eab308', text: '土' },
+    '금': { bg: '#a1a1aa', text: '金' },
+    '수': { bg: '#3b82f6', text: '水' },
+    'Wood': { bg: '#22c55e', text: '木' },
+    'Fire': { bg: '#ef4444', text: '火' },
+    'Earth': { bg: '#eab308', text: '土' },
+    'Metal': { bg: '#a1a1aa', text: '金' },
+    'Water': { bg: '#3b82f6', text: '水' },
+};
+
+// ============================================
+// 폼 옵션 생성
+// ============================================
+function populateSelects() {
+    const yearSel = document.getElementById('birth-year');
+    const monthSel = document.getElementById('birth-month');
+    const daySel = document.getElementById('birth-day');
+    const hourSel = document.getElementById('birth-hour');
+
+    const currentYear = new Date().getFullYear();
+    for (let y = currentYear - 10; y >= 1940; y--) {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y + '년';
+        opt.className = 'bg-gray-800';
+        yearSel.appendChild(opt);
+    }
+    for (let m = 1; m <= 12; m++) {
+        const opt = document.createElement('option');
+        opt.value = m;
+        opt.textContent = m + '월';
+        opt.className = 'bg-gray-800';
+        monthSel.appendChild(opt);
+    }
+    for (let d = 1; d <= 31; d++) {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.textContent = d + '일';
+        opt.className = 'bg-gray-800';
+        daySel.appendChild(opt);
+    }
+    for (let h = 0; h <= 23; h++) {
+        const opt = document.createElement('option');
+        opt.value = h;
+        opt.textContent = h + '시';
+        opt.className = 'bg-gray-800';
+        hourSel.appendChild(opt);
+    }
+}
+populateSelects();
+
+// ============================================
+// CSRF 토큰
+// ============================================
+function getCSRFToken() {
+    const el = document.querySelector('[name=csrfmiddlewaretoken]');
+    return el ? el.value : '';
+}
+
+// ============================================
+// 로또 볼 색상
+// ============================================
+function getBallColor(num) {
+    if (num <= 10) return '#FFC107';
+    if (num <= 20) return '#2196F3';
+    if (num <= 30) return '#F44336';
+    if (num <= 40) return '#9E9E9E';
+    return '#4CAF50';
+}
+function getBallTextColor(num) {
+    return num <= 10 ? '#333' : '#fff';
+}
+
+// ============================================
+// 섹션 전환
+// ============================================
+function showSection(sectionId) {
+    ['saju-form-section', 'loading-section', 'result-section', 'error-section'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+    });
+    document.getElementById(sectionId).classList.remove('hidden');
+    if (sectionId !== 'saju-form-section') {
+        document.getElementById(sectionId).scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+// ============================================
+// 폼 제출
+// ============================================
+document.getElementById('saju-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const year = parseInt(document.getElementById('birth-year').value);
+    const month = parseInt(document.getElementById('birth-month').value);
+    const day = parseInt(document.getElementById('birth-day').value);
+    const hourVal = document.getElementById('birth-hour').value;
+    const minute = parseInt(document.getElementById('birth-minute').value) || 0;
+    const gender = document.querySelector('input[name="gender"]:checked').value;
+
+    if (!year || !month || !day) {
+        alert('생년월일을 입력해주세요.');
+        return;
+    }
+
+    const hour = (hourVal === '' || hourVal === '-1') ? null : parseInt(hourVal);
+
+    showSection('loading-section');
+
+    try {
+        // 1. orrery로 사주 계산
+        const sajuInput = { year, month, day, gender };
+        if (hour !== null) {
+            sajuInput.hour = hour;
+            sajuInput.minute = minute;
+        }
+
+        let sajuResult;
+        try {
+            sajuResult = calculateSaju(sajuInput);
+        } catch (calcErr) {
+            console.error('사주 계산 오류:', calcErr);
+            throw new Error('사주 계산에 실패했습니다. 입력 정보를 확인해주세요.');
+        }
+
+        // 2. 사주 결과에서 데이터 추출
+        const pillars = extractPillars(sajuResult);
+        const tenGods = extractTenGods(sajuResult);
+        const elements = countElements(sajuResult);
+
+        // 3. 사주 차트 UI 즉시 표시
+        displayPillarChart(sajuResult, pillars, tenGods, elements);
+
+        // 4. AI 해석 요청
+        const response = await fetch('/saju/api/interpret/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken(),
+            },
+            body: JSON.stringify({
+                pillars,
+                birth_info: { year, month, day, hour, minute, gender },
+                ten_gods: tenGods,
+                elements,
+            }),
+        });
+
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error || '서버 오류가 발생했습니다.');
+        }
+
+        const result = await response.json();
+        displayResults(result);
+        showSection('result-section');
+
+    } catch (err) {
+        document.getElementById('error-message').textContent = err.message;
+        showSection('error-section');
+    }
+});
+
+// ============================================
+// 사주 결과 데이터 추출
+// ============================================
+function extractPillars(result) {
+    const pillars = {};
+    const keys = ['year', 'month', 'day', 'hour'];
+    const pillarData = result.pillars || result;
+
+    keys.forEach(key => {
+        const p = pillarData[key] || {};
+        pillars[key] = {
+            stem: p.stem || p.heavenlyStem || p.gan || '?',
+            branch: p.branch || p.earthlyBranch || p.ji || '?',
+            stemHanja: p.stemHanja || p.ganHanja || '',
+            branchHanja: p.branchHanja || p.jiHanja || '',
+            element: p.element || p.stemElement || '',
+        };
+    });
+    return pillars;
+}
+
+function extractTenGods(result) {
+    const gods = {};
+    const keys = ['year', 'month', 'day', 'hour'];
+    const tenGodsData = result.tenGods || result.sipsin || {};
+
+    keys.forEach(key => {
+        gods[key] = tenGodsData[key] || '';
+    });
+    return gods;
+}
+
+function countElements(result) {
+    const counts = { '목': 0, '화': 0, '토': 0, '금': 0, '수': 0 };
+    const ELEMENT_MAP = {
+        'Wood': '목', 'Fire': '화', 'Earth': '토', 'Metal': '금', 'Water': '수',
+        '목': '목', '화': '화', '토': '토', '금': '금', '수': '수',
+    };
+    const pillars = result.pillars || result;
+    ['year', 'month', 'day', 'hour'].forEach(key => {
+        const p = pillars[key];
+        if (!p) return;
+        const stemElem = p.stemElement || p.element || '';
+        const branchElem = p.branchElement || '';
+        if (ELEMENT_MAP[stemElem]) counts[ELEMENT_MAP[stemElem]]++;
+        if (ELEMENT_MAP[branchElem]) counts[ELEMENT_MAP[branchElem]]++;
+    });
+    return counts;
+}
+
+// ============================================
+// 사주 차트 표시
+// ============================================
+function displayPillarChart(sajuResult, pillars, tenGods, elements) {
+    ['hour', 'day', 'month', 'year'].forEach(key => {
+        const p = pillars[key];
+        const stemEl = document.getElementById(`stem-${key}`);
+        const branchEl = document.getElementById(`branch-${key}`);
+        const godEl = document.getElementById(`god-${key}`);
+
+        const stemText = p.stemHanja || p.stem;
+        const branchText = p.branchHanja || p.branch;
+
+        stemEl.textContent = stemText;
+        branchEl.textContent = branchText;
+
+        // 오행 색상 적용
+        const elemColor = ELEMENT_COLORS[p.element] || {};
+        if (elemColor.bg) {
+            stemEl.style.color = elemColor.bg;
+        }
+
+        if (key !== 'day' && tenGods[key]) {
+            godEl.textContent = tenGods[key];
+        }
+    });
+
+    // 오행 분포 바
+    const barsEl = document.getElementById('element-bars');
+    barsEl.innerHTML = '';
+    const total = Object.values(elements).reduce((a, b) => a + b, 0) || 1;
+
+    Object.entries(elements).forEach(([elem, count]) => {
+        const pct = Math.max((count / total) * 100, 8);
+        const color = ELEMENT_COLORS[elem] || {};
+        const bar = document.createElement('div');
+        bar.className = 'rounded-full text-center text-[10px] font-bold py-1 transition-all';
+        bar.style.width = pct + '%';
+        bar.style.backgroundColor = color.bg || '#666';
+        bar.style.color = '#fff';
+        bar.textContent = (color.text || elem) + count;
+        barsEl.appendChild(bar);
+    });
+}
+
+// ============================================
+// AI 결과 표시
+// ============================================
+function displayResults(result) {
+    const interp = result.interpretation || {};
+    document.getElementById('result-summary').textContent = interp.summary || '';
+    document.getElementById('result-fortune').textContent = interp.fortune || '';
+    document.getElementById('result-element-analysis').textContent = interp.element_analysis || '';
+    document.getElementById('result-message').textContent = result.lucky_message || '';
+
+    // 로또 번호 카드
+    const container = document.getElementById('lucky-numbers-container');
+    container.innerHTML = '';
+
+    const luckyNums = result.lucky_numbers || [];
+    luckyNums.forEach((set, idx) => {
+        const card = document.createElement('div');
+        card.className = 'glass-card rounded-2xl p-5';
+        card.innerHTML = `
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-sm font-semibold text-white/80">🎱 ${set.set_name || '세트 ' + (idx + 1)}</h3>
+            </div>
+            <div class="flex justify-center gap-2 mb-3">
+                ${(set.numbers || []).map(num => `
+                    <div class="ball-enter w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-md"
+                         style="background: ${getBallColor(num)}; color: ${getBallTextColor(num)};">
+                        ${num}
+                    </div>
+                `).join('')}
+            </div>
+            <p class="text-white/40 text-xs text-center">${set.reason || ''}</p>
+        `;
+        container.appendChild(card);
+    });
+}
+
+// ============================================
+// 리셋
+// ============================================
+window.resetForm = function() {
+    showSection('saju-form-section');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// ============================================
+// 네비바 스크롤 효과
+// ============================================
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+    if (window.scrollY > 80) {
+        navbar.classList.add('navbar-scrolled');
+    } else {
+        navbar.classList.remove('navbar-scrolled');
+    }
+});
+</script>
+{% endblock %}
