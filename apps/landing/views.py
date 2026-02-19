@@ -3,6 +3,7 @@ from datetime import date
 
 from django.views.generic import TemplateView
 
+from apps.analysis.models import DrawResult
 from .services.lotto_stats import (
     get_current_draw_data,
     get_number_stats,
@@ -10,6 +11,7 @@ from .services.lotto_stats import (
     get_recent_draws,
 )
 from .services.mock_data import (
+    CURRENT_DRAW, AI_RECOMMENDATIONS, NUMBER_STATS,
     LUCKY_STORES, USER_LEVELS, SERVICE_STAGES,
     DAILY_QUOTES, COMMUNITY_POSTS,
 )
@@ -21,16 +23,23 @@ class LandingPageView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # 날짜 기반 시드로 매일 다른 행운번호 생성
         today_seed = date.today().toordinal()
         rng = random.Random(today_seed)
         daily_numbers = sorted(rng.sample(range(1, 46), 6))
 
-        # DB 기반 실제 데이터
-        current_draw = get_current_draw_data()
-        number_stats = get_number_stats()
-        ai_recommendations = get_ai_recommendations_from_stats()
-        recent_draws = get_recent_draws(5)
+        # DB에 데이터가 있으면 실데이터, 없으면 mock 폴백
+        has_data = DrawResult.objects.exists()
+
+        if has_data:
+            current_draw = get_current_draw_data()
+            number_stats = get_number_stats()
+            ai_recommendations = get_ai_recommendations_from_stats()
+            recent_draws = get_recent_draws(5)
+        else:
+            current_draw = CURRENT_DRAW
+            number_stats = NUMBER_STATS
+            ai_recommendations = AI_RECOMMENDATIONS
+            recent_draws = []
 
         context.update({
             'current_draw': current_draw,
