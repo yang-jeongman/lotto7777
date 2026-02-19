@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'apps.analysis',
     'apps.accounts',
     'apps.saju',
+    'apps.results',
 ]
 
 MIDDLEWARE = [

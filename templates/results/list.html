@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load lotto_tags humanize %}
+
+{% block title %}역대 당첨번호 - L7*7{% endblock %}
+
+{% block content %}
+<section class="pt-24 pb-16 px-4 bg-gradient-to-b from-lotto-purple-dark to-lotto-blue-dark min-h-screen">
+    <div class="max-w-3xl mx-auto">
+        <!-- 헤더 -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold">
+                <span class="text-lotto-gold">역대</span> 당첨번호
+            </h1>
+            <p class="text-white/40 text-sm mt-2">1회 ~ {{ draws.0.draw_no }}회 전체 당첨 결과</p>
+        </div>
+
+        <!-- 회차 목록 -->
+        <div class="space-y-3">
+            {% for draw in draws %}
+            <a href="{% url 'results:detail' draw.draw_no %}"
+               class="glass-card rounded-xl p-4 block hover:border-lotto-gold/30 transition-all">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <span class="text-lotto-gold font-bold">제{{ draw.draw_no }}회</span>
+                        <span class="text-white/40 text-xs ml-2">{{ draw.draw_date }}</span>
+                    </div>
+                    {% if draw.first_prize_amount %}
+                    <span class="text-xs text-white/40">
+                        1등 {{ draw.first_prize_amount|intcomma_kr }}원
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="flex items-center gap-1.5">
+                    {% for num in draw.numbers %}
+                    <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shadow-md"
+                         style="background: {{ num|ball_color }}; color: {{ num|ball_text_color }};">
+                        {{ num }}
+                    </div>
+                    {% endfor %}
+                    <span class="text-white/30 mx-1">+</span>
+                    <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shadow-md ring-1 ring-lotto-gold/50"
+                         style="background: {{ draw.bonus_number|ball_color }}; color: {{ draw.bonus_number|ball_text_color }};">
+                        {{ draw.bonus_number }}
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+
+        <!-- 페이지네이션 -->
+        {% if is_paginated %}
+        <div class="flex justify-center items-center gap-2 mt-8">
+            {% if page_obj.has_previous %}
+            <a href="?page=1" class="px-3 py-2 rounded-lg bg-white/10 text-sm text-white/60 hover:bg-white/20">&laquo;</a>
+            <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-2 rounded-lg bg-white/10 text-sm text-white/60 hover:bg-white/20">&lsaquo;</a>
+            {% endif %}
+
+            <span class="px-4 py-2 rounded-lg bg-lotto-gold text-lotto-blue-dark font-bold text-sm">
+                {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-2 rounded-lg bg-white/10 text-sm text-white/60 hover:bg-white/20">&rsaquo;</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}" class="px-3 py-2 rounded-lg bg-white/10 text-sm text-white/60 hover:bg-white/20">&raquo;</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

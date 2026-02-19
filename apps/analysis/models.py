@@ -14,6 +14,8 @@ class DrawResult(models.Model):
     bonus_number = models.PositiveSmallIntegerField(verbose_name='보너스')
     first_prize_amount = models.BigIntegerField(default=0, verbose_name='1등 당첨금')
     first_prize_winners = models.PositiveIntegerField(default=0, verbose_name='1등 당첨자수')
+    second_prize_amount = models.BigIntegerField(default=0, verbose_name='2등 당첨금')
+    second_prize_winners = models.PositiveIntegerField(default=0, verbose_name='2등 당첨자수')
     total_sales = models.BigIntegerField(default=0, verbose_name='총 판매금액')
     created_at = models.DateTimeField(auto_now_add=True)
 

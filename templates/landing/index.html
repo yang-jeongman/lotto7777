@@ -80,10 +80,24 @@
             </div>
         </div>
 
-        <!-- CTA -->
-        <a href="#ai-recommend" class="inline-block px-8 py-4 bg-lotto-gold text-lotto-blue-dark font-bold rounded-full text-lg shadow-lg shadow-lotto-gold/30 hover:bg-lotto-gold-light transition-all duration-300 hover:scale-105 active:scale-95">
-            AI 추천번호 확인하기
-        </a>
+        <!-- CTA 버튼 그룹 -->
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <a href="#ai-recommend" class="inline-block px-8 py-4 bg-lotto-gold text-lotto-blue-dark font-bold rounded-full text-lg shadow-lg shadow-lotto-gold/30 hover:bg-lotto-gold-light transition-all duration-300 hover:scale-105 active:scale-95">
+                AI 추천번호 확인하기
+            </a>
+        </div>
+
+        <!-- 외부 링크 -->
+        <div class="flex justify-center gap-4 mt-4">
+            <a href="https://www.dhlottery.co.kr/gameResult.do?method=byWin" target="_blank" rel="noopener"
+               class="text-xs text-white/40 hover:text-lotto-gold transition-colors underline underline-offset-2">
+                공식 당첨결과 확인
+            </a>
+            <a href="https://www.dhlottery.co.kr/store.do?method=topStore&pageGubun=L645" target="_blank" rel="noopener"
+               class="text-xs text-white/40 hover:text-lotto-gold transition-colors underline underline-offset-2">
+                당첨 판매점 조회
+            </a>
+        </div>
     </div>
 
     <!-- 스크롤 인디케이터 -->
@@ -170,7 +184,7 @@
                  data-freq10="{{ num_data.1.freq_10 }}"
                  data-freq30="{{ num_data.1.freq_30 }}"
                  data-freq100="{{ num_data.1.freq_100 }}"
-                 style="background: {{ num_data.1.freq_10|intcomma_kr }};"
+                 data-freqtotal="{{ num_data.1.freq_total }}"
                  title="{{ num_data.0 }}번: {{ num_data.1.freq_10 }}회 출현">
                 <span class="relative z-10">{{ num_data.0 }}</span>
             </div>
@@ -272,9 +286,10 @@
         </div>
 
         <div class="text-center mt-6">
-            <span class="inline-block px-4 py-2 bg-white/5 border border-white/10 rounded-full text-xs text-white/40">
-                🗺️ 전체 지도 보기 (준비 중)
-            </span>
+            <a href="https://www.dhlottery.co.kr/store.do?method=topStore&pageGubun=L645" target="_blank" rel="noopener"
+               class="inline-block px-6 py-2.5 bg-white/10 border border-white/20 rounded-full text-sm text-white/60 hover:bg-white/20 hover:text-white transition-all">
+                🗺️ 동행복권 당첨 판매점 조회
+            </a>
         </div>
     </div>
 </section>
@@ -484,18 +499,47 @@
 {% block extra_js %}
 <script>
 // ============================================
-// 카운트다운 타이머
+// 카운트다운 타이머 (다음 토요일 20:45 KST 자동 계산)
 // ============================================
+function getNextDrawTime() {
+    // 현재 KST 시간 기준으로 다음 토요일 20:45 계산
+    const now = new Date();
+    // KST offset: UTC+9
+    const kstOffset = 9 * 60;
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const kstNow = new Date(utc + (kstOffset * 60000));
+
+    const dayOfWeek = kstNow.getDay(); // 0=일 ~ 6=토
+    let daysUntilSaturday = (6 - dayOfWeek + 7) % 7;
+
+    // 토요일인데 20:45 이후면 다음 주 토요일
+    if (daysUntilSaturday === 0) {
+        const kstHour = kstNow.getHours();
+        const kstMin = kstNow.getMinutes();
+        if (kstHour > 20 || (kstHour === 20 && kstMin >= 45)) {
+            daysUntilSaturday = 7;
+        }
+    }
+
+    // 다음 토요일 20:45 KST = 11:45 UTC
+    const nextSat = new Date(kstNow);
+    nextSat.setDate(nextSat.getDate() + daysUntilSaturday);
+    nextSat.setHours(20, 45, 0, 0);
+
+    // KST → UTC로 변환
+    return new Date(nextSat.getTime() - (kstOffset * 60000));
+}
+
 function updateCountdown() {
-    const nextDraw = new Date('{{ current_draw.next_draw_date }}');
+    const nextDraw = getNextDrawTime();
     const now = new Date();
     const diff = nextDraw - now;
 
     if (diff <= 0) {
         document.getElementById('cd-days').textContent = '0';
-        document.getElementById('cd-hours').textContent = '0';
-        document.getElementById('cd-minutes').textContent = '0';
-        document.getElementById('cd-seconds').textContent = '0';
+        document.getElementById('cd-hours').textContent = '00';
+        document.getElementById('cd-minutes').textContent = '00';
+        document.getElementById('cd-seconds').textContent = '00';
         return;
     }
 
@@ -511,28 +555,6 @@ function updateCountdown() {
 }
 updateCountdown();
 setInterval(updateCountdown, 1000);
-
-// ============================================
-// 네비바 스크롤 효과
-// ============================================
-const navbar = document.getElementById('navbar');
-window.addEventListener('scroll', () => {
-    if (window.scrollY > 80) {
-        navbar.classList.add('navbar-scrolled');
-    } else {
-        navbar.classList.remove('navbar-scrolled');
-    }
-});
-
-// ============================================
-// 모바일 메뉴
-// ============================================
-function toggleMobileMenu() {
-    document.getElementById('mobile-menu').classList.toggle('hidden');
-}
-function closeMobileMenu() {
-    document.getElementById('mobile-menu').classList.add('hidden');
-}
 
 // ============================================
 // 섹션 페이드인 (Intersection Observer)

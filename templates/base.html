@@ -138,6 +138,27 @@
 
     {% include "components/_footer.html" %}
 
+    <script>
+    // 공통: 모바일 메뉴 토글
+    function toggleMobileMenu() {
+        document.getElementById('mobile-menu').classList.toggle('hidden');
+    }
+    function closeMobileMenu() {
+        document.getElementById('mobile-menu').classList.add('hidden');
+    }
+    // 공통: 네비바 스크롤 효과
+    const navbar = document.getElementById('navbar');
+    if (navbar) {
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 80) {
+                navbar.classList.add('navbar-scrolled');
+            } else {
+                navbar.classList.remove('navbar-scrolled');
+            }
+        });
+    }
+    </script>
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>
