@@ -14,7 +14,16 @@
             <a href="/#analysis" class="text-white/70 hover:text-lotto-gold transition-colors">통계분석</a>
             <a href="/#ai-recommend" class="text-white/70 hover:text-lotto-gold transition-colors">번호생성</a>
             <a href="/saju/" class="text-white/70 hover:text-lotto-gold transition-colors">사주운세</a>
-            <a href="/#community" class="text-white/70 hover:text-lotto-gold transition-colors">커뮤니티</a>
+            <a href="/community/" class="text-white/70 hover:text-lotto-gold transition-colors">커뮤니티</a>
+            {% if user.is_authenticated %}
+            <a href="{% url 'accounts:profile' %}" class="text-lotto-gold font-medium hover:text-lotto-gold-light transition-colors">
+                {{ user.profile.nickname|default:user.email }}
+            </a>
+            {% else %}
+            <a href="{% url 'accounts:login' %}" class="px-4 py-1.5 bg-lotto-gold/20 border border-lotto-gold/40 rounded-full text-lotto-gold text-xs font-medium hover:bg-lotto-gold/30 transition-all">
+                로그인
+            </a>
+            {% endif %}
         </div>
 
         <!-- 모바일 햄버거 -->
@@ -32,7 +41,21 @@
             <a href="/#analysis" class="block text-white/70 hover:text-lotto-gold py-2" onclick="closeMobileMenu()">통계분석</a>
             <a href="/#ai-recommend" class="block text-white/70 hover:text-lotto-gold py-2" onclick="closeMobileMenu()">번호생성</a>
             <a href="/saju/" class="block text-white/70 hover:text-lotto-gold py-2" onclick="closeMobileMenu()">사주운세</a>
-            <a href="/#community" class="block text-white/70 hover:text-lotto-gold py-2" onclick="closeMobileMenu()">커뮤니티</a>
+            <a href="/community/" class="block text-white/70 hover:text-lotto-gold py-2" onclick="closeMobileMenu()">커뮤니티</a>
+            {% if user.is_authenticated %}
+            <div class="border-t border-white/10 pt-3 mt-2">
+                <a href="{% url 'accounts:profile' %}" class="block text-lotto-gold py-2" onclick="closeMobileMenu()">{{ user.profile.nickname|default:user.email }}</a>
+                <form method="post" action="{% url 'accounts:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="block text-white/40 hover:text-red-400 py-2 text-sm">로그아웃</button>
+                </form>
+            </div>
+            {% else %}
+            <div class="border-t border-white/10 pt-3 mt-2">
+                <a href="{% url 'accounts:login' %}" class="block text-lotto-gold py-2" onclick="closeMobileMenu()">로그인</a>
+                <a href="{% url 'accounts:signup' %}" class="block text-white/50 py-2" onclick="closeMobileMenu()">회원가입</a>
+            </div>
+            {% endif %}
         </div>
     </div>
 </nav>

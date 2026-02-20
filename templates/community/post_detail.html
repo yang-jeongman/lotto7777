@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}{{ post.title }} - L7*7 커뮤니티{% endblock %}
+
+{% block content %}
+<section class="pt-24 pb-16 px-4 min-h-screen">
+    <div class="max-w-3xl mx-auto">
+        <!-- 상단 네비 -->
+        <div class="mb-4">
+            <a href="{% url 'community:post_list' post.board.slug %}" class="text-white/40 hover:text-white text-sm">
+                &larr; {{ post.board.icon }} {{ post.board.name }}
+            </a>
+        </div>
+
+        <!-- 게시글 -->
+        <div class="glass-card rounded-2xl p-6 mb-4">
+            <h1 class="text-xl font-bold mb-3">{{ post.title }}</h1>
+            <div class="flex items-center justify-between text-xs text-white/40 mb-4 pb-4 border-b border-white/10">
+                <div class="flex items-center gap-3">
+                    <span class="text-lotto-gold">{{ post.author.profile.nickname|default:post.author.username }}</span>
+                    <span>{{ post.created_at|date:"Y.m.d H:i" }}</span>
+                    <span>조회 {{ post.views }}</span>
+                </div>
+                {% if user == post.author %}
+                <div class="flex gap-2">
+                    <a href="{% url 'community:post_update' post.pk %}" class="hover:text-white">수정</a>
+                    <a href="{% url 'community:post_delete' post.pk %}" class="hover:text-red-400">삭제</a>
+                </div>
+                {% endif %}
+            </div>
+            <div class="text-sm text-white/80 leading-relaxed whitespace-pre-wrap">{{ post.content }}</div>
+
+            <!-- 좋아요 -->
+            <div class="mt-6 pt-4 border-t border-white/10 flex items-center gap-2">
+                <button id="like-btn" onclick="toggleLike({{ post.pk }})"
+                    class="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all
+                    {% if user_liked %}bg-red-500/20 text-red-400 border border-red-500/30{% else %}bg-white/5 text-white/40 border border-white/10 hover:bg-white/10{% endif %}">
+                    <span id="like-icon">{% if user_liked %}❤️{% else %}🤍{% endif %}</span>
+                    <span id="like-count">{{ post.like_count }}</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 댓글 -->
+        <div class="glass-card rounded-2xl p-6">
+            <h3 class="font-bold text-sm mb-4">댓글 {{ comments|length }}개</h3>
+
+            {% for comment in comments %}
+            <div class="py-3 border-b border-white/5 last:border-0">
+                <div class="flex items-center gap-2 mb-1 text-xs">
+                    <span class="text-lotto-gold">{{ comment.author.profile.nickname|default:comment.author.username }}</span>
+                    <span class="text-white/30">{{ comment.created_at|date:"m/d H:i" }}</span>
+                </div>
+                <p class="text-sm text-white/70">{{ comment.content }}</p>
+            </div>
+            {% empty %}
+            <p class="text-white/30 text-sm py-2">아직 댓글이 없습니다.</p>
+            {% endfor %}
+
+            {% if user.is_authenticated %}
+            <form method="post" action="{% url 'community:comment_create' post.pk %}" class="mt-4 pt-4 border-t border-white/10">
+                {% csrf_token %}
+                {{ comment_form.content }}
+                <button type="submit"
+                    class="mt-2 px-4 py-2 bg-lotto-gold/20 border border-lotto-gold/40 text-lotto-gold text-sm rounded-lg hover:bg-lotto-gold/30 transition-all">
+                    댓글 작성
+                </button>
+            </form>
+            {% else %}
+            <p class="text-white/30 text-xs mt-4 pt-4 border-t border-white/10">
+                <a href="{% url 'accounts:login' %}" class="text-lotto-gold hover:underline">로그인</a> 후 댓글을 작성할 수 있습니다.
+            </p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function toggleLike(postId) {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value
+        || '{{ csrf_token }}';
+    const res = await fetch(`/community/post/${postId}/like/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json',
+        },
+    });
+    if (!res.ok) {
+        if (res.status === 403) window.location.href = '{% url "accounts:login" %}';
+        return;
+    }
+    const data = await res.json();
+    const btn = document.getElementById('like-btn');
+    document.getElementById('like-icon').textContent = data.liked ? '❤️' : '🤍';
+    document.getElementById('like-count').textContent = data.count;
+    if (data.liked) {
+        btn.className = btn.className.replace('bg-white/5 text-white/40 border-white/10 hover:bg-white/10', 'bg-red-500/20 text-red-400 border-red-500/30');
+    } else {
+        btn.className = btn.className.replace('bg-red-500/20 text-red-400 border-red-500/30', 'bg-white/5 text-white/40 border-white/10 hover:bg-white/10');
+    }
+}
+</script>
+{% endblock %}

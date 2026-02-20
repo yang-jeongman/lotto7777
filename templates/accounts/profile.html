@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}마이페이지 - L7*7{% endblock %}
+
+{% block content %}
+<section class="pt-24 pb-16 px-4 min-h-screen">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">마이페이지</h1>
+
+        <!-- 프로필 카드 -->
+        <div class="glass-card rounded-2xl p-6 mb-6">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-lotto-gold to-yellow-500 flex items-center justify-center text-lotto-blue-dark text-xl font-bold">
+                    {% if profile %}{{ profile.nickname|first }}{% else %}?{% endif %}
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold">{% if profile %}{{ profile.nickname }}{% else %}{{ user.email }}{% endif %}</h2>
+                    <p class="text-sm text-white/50">{{ user.email }}</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 text-center">
+                <div class="bg-white/5 rounded-xl py-3">
+                    <div class="text-xl font-bold text-lotto-gold">{{ post_count }}</div>
+                    <div class="text-xs text-white/40">게시글</div>
+                </div>
+                <div class="bg-white/5 rounded-xl py-3">
+                    <div class="text-xl font-bold text-lotto-gold">{{ comment_count }}</div>
+                    <div class="text-xs text-white/40">댓글</div>
+                </div>
+                <div class="bg-white/5 rounded-xl py-3">
+                    <div class="text-xl font-bold text-lotto-gold">{{ login_history|length }}</div>
+                    <div class="text-xs text-white/40">접속 횟수</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 접속 이력 -->
+        <div class="glass-card rounded-2xl p-6">
+            <h3 class="text-lg font-bold mb-4">접속 이력</h3>
+            {% if login_history %}
+            <div class="space-y-2">
+                {% for entry in login_history %}
+                <div class="flex justify-between items-center text-sm py-2 border-b border-white/5 last:border-0">
+                    <span class="text-white/70">{{ entry.logged_in_at|date:"Y-m-d H:i" }}</span>
+                    <span class="text-white/30 text-xs">{{ entry.ip_address|default:"-" }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-white/30 text-sm">접속 이력이 없습니다.</p>
+            {% endif %}
+        </div>
+
+        <!-- 로그아웃 -->
+        <form method="post" action="{% url 'accounts:logout' %}" class="mt-6 text-center">
+            {% csrf_token %}
+            <button type="submit" class="text-sm text-white/40 hover:text-red-400 transition-colors">
+                로그아웃
+            </button>
+        </form>
+    </div>
+</section>
+{% endblock %}

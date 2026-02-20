@@ -1,0 +1,6 @@
+[
+  {"model": "community.board", "pk": 1, "fields": {"slug": "winner-stories", "name": "당첨후기", "description": "당첨 경험을 공유해주세요!", "icon": "🏆", "order": 1}},
+  {"model": "community.board", "pk": 2, "fields": {"slug": "number-analysis", "name": "번호분석", "description": "나만의 번호 분석 전략을 공유하세요", "icon": "📊", "order": 2}},
+  {"model": "community.board", "pk": 3, "fields": {"slug": "free-board", "name": "자유게시판", "description": "자유롭게 이야기해요", "icon": "💬", "order": 3}},
+  {"model": "community.board", "pk": 4, "fields": {"slug": "group-buying", "name": "공동구매", "description": "함께 구매하고 행운을 나누세요", "icon": "🤝", "order": 4}}
+]

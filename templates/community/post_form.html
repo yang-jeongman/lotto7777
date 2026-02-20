@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{% if object %}글 수정{% else %}글쓰기{% endif %} - L7*7 커뮤니티{% endblock %}
+
+{% block content %}
+<section class="pt-24 pb-16 px-4 min-h-screen">
+    <div class="max-w-2xl mx-auto">
+        <div class="mb-6">
+            <h1 class="text-xl font-bold">{{ board.icon }} {{ board.name }} - {% if object %}글 수정{% else %}글쓰기{% endif %}</h1>
+        </div>
+
+        <div class="glass-card rounded-2xl p-6">
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+
+                <div>
+                    <label class="block text-sm text-white/60 mb-1">제목</label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                    <p class="text-red-400 text-xs mt-1">{{ form.title.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-sm text-white/60 mb-1">내용</label>
+                    {{ form.content }}
+                    {% if form.content.errors %}
+                    <p class="text-red-400 text-xs mt-1">{{ form.content.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="submit"
+                        class="px-6 py-2.5 bg-gradient-to-r from-lotto-gold to-yellow-500 text-lotto-blue-dark font-bold rounded-lg hover:shadow-lg transition-all">
+                        {% if object %}수정하기{% else %}작성하기{% endif %}
+                    </button>
+                    <a href="{% if object %}{% url 'community:post_detail' object.pk %}{% else %}{% url 'community:post_list' board.slug %}{% endif %}"
+                       class="px-6 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white/60 hover:bg-white/20 transition-all">
+                        취소
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

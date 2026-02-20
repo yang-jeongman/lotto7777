@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'apps.accounts',
     'apps.saju',
     'apps.results',
+    'apps.community',
 ]
 
 MIDDLEWARE = [
@@ -92,3 +93,7 @@ STORAGES = {
         'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
     },
 }
+
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'

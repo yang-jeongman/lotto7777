@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}글 삭제 - L7*7 커뮤니티{% endblock %}
+
+{% block content %}
+<section class="pt-24 pb-16 px-4 min-h-screen">
+    <div class="max-w-md mx-auto text-center">
+        <div class="glass-card rounded-2xl p-8">
+            <h1 class="text-xl font-bold mb-2">글 삭제</h1>
+            <p class="text-white/50 text-sm mb-6">
+                "{{ object.title }}"을(를) 삭제하시겠습니까?<br>
+                삭제된 글은 복구할 수 없습니다.
+            </p>
+            <form method="post" class="flex gap-3 justify-center">
+                {% csrf_token %}
+                <button type="submit"
+                    class="px-6 py-2.5 bg-red-500/80 text-white font-bold rounded-lg hover:bg-red-500 transition-all">
+                    삭제하기
+                </button>
+                <a href="{% url 'community:post_detail' object.pk %}"
+                   class="px-6 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white/60 hover:bg-white/20 transition-all">
+                    취소
+                </a>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

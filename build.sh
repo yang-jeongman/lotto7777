@@ -8,3 +8,4 @@ python manage.py migrate
 
 # DB가 비어있으면 초기 데이터 적재
 python manage.py loaddata initial_draws || echo "Fixture load skipped"
+python manage.py loaddata boards || echo "Board fixture skipped"

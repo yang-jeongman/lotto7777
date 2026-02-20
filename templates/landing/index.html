@@ -152,7 +152,7 @@
         </div>
 
         <div class="text-center mt-6">
-            <a href="#" class="text-sm text-lotto-gold hover:text-lotto-gold-light transition-colors">
+            <a href="{% url 'landing:more_recommendations' %}" class="text-sm text-lotto-gold hover:text-lotto-gold-light transition-colors">
                 더 많은 추천 보기 &rarr;
             </a>
         </div>
@@ -494,6 +494,20 @@
     </div>
 </section>
 
+<!-- 번호 상세 통계 모달 -->
+<div id="number-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm px-4" onclick="if(event.target===this)closeNumberModal()">
+    <div class="glass-card rounded-2xl p-6 max-w-sm w-full relative" style="background: rgba(15,23,42,0.95); border: 1px solid rgba(255,255,255,0.15);">
+        <button onclick="closeNumberModal()" class="absolute top-3 right-3 text-white/40 hover:text-white">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+        <div id="modal-content">
+            <div class="text-center py-8"><div class="text-white/40">로딩 중...</div></div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -627,6 +641,101 @@ function switchPeriod(period) {
 
 // 초기 그리드 색상 설정
 switchPeriod(10);
+
+// ============================================
+// 번호 상세 통계 모달
+// ============================================
+const BALL_COLORS = {1:'#FFC107',11:'#2196F3',21:'#F44336',31:'#9E9E9E',41:'#4CAF50'};
+function getBallColor(n) {
+    if (n <= 10) return BALL_COLORS[1];
+    if (n <= 20) return BALL_COLORS[11];
+    if (n <= 30) return BALL_COLORS[21];
+    if (n <= 40) return BALL_COLORS[31];
+    return BALL_COLORS[41];
+}
+function getBallTextColor(n) { return n <= 10 ? '#333' : '#fff'; }
+
+document.querySelectorAll('.num-cell').forEach(cell => {
+    cell.style.cursor = 'pointer';
+    cell.addEventListener('click', () => openNumberModal(parseInt(cell.dataset.num)));
+});
+
+async function openNumberModal(num) {
+    const modal = document.getElementById('number-modal');
+    const content = document.getElementById('modal-content');
+    content.innerHTML = '<div class="text-center py-8"><div class="text-white/40 text-sm">로딩 중...</div></div>';
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+
+    try {
+        const res = await fetch(`/api/number/${num}/stats/`);
+        const d = await res.json();
+        const trendIcon = d.trend === 'increasing' ? '📈 상승' : d.trend === 'decreasing' ? '📉 하락' : '➡️ 유지';
+        const coHtml = d.co_occurrence.map(c =>
+            `<div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow" style="background:${getBallColor(c.number)};color:${getBallTextColor(c.number)};" title="${c.count}회">${c.number}</div>`
+        ).join('');
+
+        content.innerHTML = `
+            <div class="text-center mb-4">
+                <div class="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold shadow-lg mx-auto mb-2"
+                     style="background:${getBallColor(num)};color:${getBallTextColor(num)};">${num}</div>
+                <div class="text-lg font-bold">${num}번 상세 통계</div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="bg-white/5 rounded-xl p-3 text-center">
+                    <div class="text-xl font-bold text-lotto-gold">${d.total_appearances}</div>
+                    <div class="text-[10px] text-white/40">전체 출현 / ${d.total_draws}회</div>
+                </div>
+                <div class="bg-white/5 rounded-xl p-3 text-center">
+                    <div class="text-xl font-bold text-white">${trendIcon}</div>
+                    <div class="text-[10px] text-white/40">최근 트렌드</div>
+                </div>
+            </div>
+            <div class="space-y-2 mb-4">
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-white/50">최근 10회</span>
+                    <div class="flex items-center gap-2">
+                        <div class="w-24 h-2 bg-white/10 rounded-full overflow-hidden">
+                            <div class="h-full rounded-full bg-lotto-gold" style="width:${d.last_10/4*100}%"></div>
+                        </div>
+                        <span class="font-bold text-lotto-gold w-8 text-right">${d.last_10}</span>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-white/50">최근 30회</span>
+                    <div class="flex items-center gap-2">
+                        <div class="w-24 h-2 bg-white/10 rounded-full overflow-hidden">
+                            <div class="h-full rounded-full bg-blue-400" style="width:${d.last_30/9*100}%"></div>
+                        </div>
+                        <span class="font-bold text-blue-400 w-8 text-right">${d.last_30}</span>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-white/50">최근 100회</span>
+                    <div class="flex items-center gap-2">
+                        <div class="w-24 h-2 bg-white/10 rounded-full overflow-hidden">
+                            <div class="h-full rounded-full bg-purple-400" style="width:${d.last_100/23*100}%"></div>
+                        </div>
+                        <span class="font-bold text-purple-400 w-8 text-right">${d.last_100}</span>
+                    </div>
+                </div>
+            </div>
+            ${d.last_draw_no ? `<div class="text-xs text-white/40 mb-4">마지막 출현: 제${d.last_draw_no}회 (${d.last_draw_date})</div>` : ''}
+            <div>
+                <div class="text-xs text-white/50 mb-2">자주 함께 나오는 번호</div>
+                <div class="flex gap-2 justify-center">${coHtml}</div>
+            </div>
+        `;
+    } catch(e) {
+        content.innerHTML = '<div class="text-center py-8 text-red-400 text-sm">데이터를 불러올 수 없습니다.</div>';
+    }
+}
+
+function closeNumberModal() {
+    const modal = document.getElementById('number-modal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
 
 // ============================================
 // 오늘의 행운번호 플립

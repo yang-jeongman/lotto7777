@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load lotto_tags %}
+{% block title %}AI 추천번호 전체 보기 - L7*7{% endblock %}
+
+{% block content %}
+<section class="pt-24 pb-16 px-4 min-h-screen bg-gradient-to-b from-lotto-purple-dark/50 to-lotto-blue-dark">
+    <div class="max-w-lg mx-auto">
+        <div class="text-center mb-8">
+            <div class="inline-block px-3 py-1 rounded-full bg-lotto-gold/20 text-lotto-gold text-xs font-semibold mb-3">
+                {{ recommendations|length }}세트 AI 분석
+            </div>
+            <h1 class="text-2xl font-bold">AI 추천번호 전체 보기</h1>
+            <p class="text-white/40 text-sm mt-2">매일 자동 업데이트 &middot; 다양한 전략 기반</p>
+        </div>
+
+        <div class="space-y-4">
+            {% for rec in recommendations %}
+            <div class="glass-card rounded-2xl p-5">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-sm font-semibold text-white/80">{{ rec.set_name }}</h3>
+                    <span class="text-xs text-white/40">{{ rec.strategy }}</span>
+                </div>
+
+                <div class="flex justify-center gap-2 mb-4">
+                    {% for num in rec.numbers %}
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-md"
+                         style="background: {{ num|ball_color }}; color: {{ num|ball_text_color }};">
+                        {{ num }}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <span class="text-xs text-white/40 whitespace-nowrap">신뢰도</span>
+                    <div class="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full bg-gradient-to-r from-lotto-gold to-lotto-gold-light"
+                             style="width: {{ rec.confidence }}%;"></div>
+                    </div>
+                    <span class="text-xs font-semibold text-lotto-gold">{{ rec.confidence }}%</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="text-center mt-8">
+            <a href="/" class="text-sm text-white/40 hover:text-white transition-colors">&larr; 홈으로 돌아가기</a>
+        </div>
+
+        <p class="text-center text-white/20 text-xs mt-8">
+            본 추천은 통계 분석 기반이며, 당첨을 보장하지 않습니다.
+        </p>
+    </div>
+</section>
+{% endblock %}
