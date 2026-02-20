@@ -513,41 +513,25 @@
 {% block extra_js %}
 <script>
 // ============================================
-// 카운트다운 타이머 (다음 토요일 20:45 KST 자동 계산)
+// 카운트다운 타이머 (다음 토요일 20:45 KST - 동행복권 동기화)
 // ============================================
-function getNextDrawTime() {
-    // 현재 KST 시간 기준으로 다음 토요일 20:45 계산
+function updateCountdown() {
     const now = new Date();
-    // KST offset: UTC+9
-    const kstOffset = 9 * 60;
-    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-    const kstNow = new Date(utc + (kstOffset * 60000));
+    // Intl API로 정확한 KST 시간 계산
+    const kst = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
 
-    const dayOfWeek = kstNow.getDay(); // 0=일 ~ 6=토
-    let daysUntilSaturday = (6 - dayOfWeek + 7) % 7;
-
-    // 토요일인데 20:45 이후면 다음 주 토요일
-    if (daysUntilSaturday === 0) {
-        const kstHour = kstNow.getHours();
-        const kstMin = kstNow.getMinutes();
-        if (kstHour > 20 || (kstHour === 20 && kstMin >= 45)) {
-            daysUntilSaturday = 7;
-        }
+    let daysUntilSat = (6 - kst.getDay() + 7) % 7;
+    if (daysUntilSat === 0 && (kst.getHours() > 20 || (kst.getHours() === 20 && kst.getMinutes() >= 45))) {
+        daysUntilSat = 7;
     }
 
-    // 다음 토요일 20:45 KST = 11:45 UTC
-    const nextSat = new Date(kstNow);
-    nextSat.setDate(nextSat.getDate() + daysUntilSaturday);
-    nextSat.setHours(20, 45, 0, 0);
+    // KST 공간에서 목표 시간 계산
+    const target = new Date(kst);
+    target.setDate(target.getDate() + daysUntilSat);
+    target.setHours(20, 45, 0, 0);
 
-    // KST → UTC로 변환
-    return new Date(nextSat.getTime() - (kstOffset * 60000));
-}
-
-function updateCountdown() {
-    const nextDraw = getNextDrawTime();
-    const now = new Date();
-    const diff = nextDraw - now;
+    // KST 공간에서의 차이 = 실제 남은 시간 (시간대 무관)
+    const diff = target - kst;
 
     if (diff <= 0) {
         document.getElementById('cd-days').textContent = '0';
