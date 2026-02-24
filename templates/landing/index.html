@@ -53,7 +53,7 @@
                 1등 {{ current_draw.first_prize|intcomma_kr }}원
             </p>
             <p class="text-white/50 text-sm mt-1">
-                {{ current_draw.first_prize_winners }}명 당첨 &middot; 총 판매 {{ current_draw.total_sales|intcomma_kr }}원
+                {{ current_draw.first_prize_winners }}명 당첨{% if current_draw.total_sales %} &middot; 총 판매 {{ current_draw.total_sales|intcomma_kr }}원{% endif %}
             </p>
         </div>
 
@@ -105,6 +105,110 @@
         <svg class="w-6 h-6 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
         </svg>
+    </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SECTION 1.5: 최근 5회 당첨번호 히스토리      -->
+<!-- ============================================ -->
+<section id="history" class="py-12 px-4 bg-gradient-to-b from-lotto-purple-dark/80 to-lotto-blue-dark">
+    <div class="max-w-lg mx-auto section-fade">
+        <div class="text-center mb-6">
+            <h2 class="text-xl font-bold">최근 당첨번호</h2>
+            <p class="text-white/40 text-xs mt-1">지난 5회차 결과 한눈에 보기</p>
+        </div>
+
+        <div class="space-y-2">
+            {% for draw in recent_draws %}
+            <div class="glass-card rounded-xl px-4 py-3 flex items-center gap-3 hover:border-white/20 transition-all">
+                <!-- 회차 -->
+                <div class="flex-shrink-0 text-center min-w-[52px]">
+                    <div class="text-lotto-gold font-bold text-sm">제{{ draw.draw_no }}회</div>
+                    <div class="text-white/30 text-[10px]">{{ draw.draw_date }}</div>
+                </div>
+                <!-- 구분선 -->
+                <div class="w-px h-8 bg-white/10 flex-shrink-0"></div>
+                <!-- 번호 볼 -->
+                <div class="flex items-center gap-1.5 flex-1 flex-wrap">
+                    {% for num in draw.numbers %}
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-md flex-shrink-0"
+                         style="background: {{ num|ball_color }}; color: {{ num|ball_text_color }};">
+                        {{ num }}
+                    </div>
+                    {% endfor %}
+                    <span class="text-white/30 text-xs mx-0.5">+</span>
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-md ring-1 ring-lotto-gold/60 flex-shrink-0"
+                         style="background: {{ draw.bonus_number|ball_color }}; color: {{ draw.bonus_number|ball_text_color }};">
+                        {{ draw.bonus_number }}
+                    </div>
+                </div>
+                <!-- 1등 당첨금 -->
+                <div class="flex-shrink-0 text-right hidden sm:block">
+                    <div class="text-white/50 text-[10px]">1등</div>
+                    <div class="text-lotto-gold text-xs font-semibold">{{ draw.first_prize|intcomma_kr }}원</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="/result/" class="inline-flex items-center gap-1 text-sm text-white/40 hover:text-lotto-gold transition-colors">
+                전체 당첨결과 보기
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SECTION 1.7: 내 번호 당첨 확인기             -->
+<!-- ============================================ -->
+<section id="checker" class="py-14 px-4 bg-lotto-blue-dark">
+    <div class="max-w-lg mx-auto section-fade">
+        <div class="text-center mb-6">
+            <h2 class="text-xl font-bold">🎯 내 번호 당첨 확인기</h2>
+            <p class="text-white/40 text-xs mt-1">구매한 번호 6개를 선택하면 즉시 확인해드립니다</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5">
+            <!-- 선택된 번호 표시 -->
+            <div class="flex justify-center items-center gap-2 mb-5 min-h-[48px]">
+                <div id="selected-display" class="flex gap-2 items-center justify-center flex-wrap">
+                    <span class="text-white/20 text-sm" id="empty-hint">번호를 선택하세요 (6개)</span>
+                </div>
+            </div>
+
+            <!-- 1~45 번호 선택 키패드 -->
+            <div class="grid grid-cols-9 gap-1 mb-5" id="number-picker">
+                {% for i in "123456789012345678901234567890123456789012345"|make_list %}{% endfor %}
+            </div>
+            <!-- JS로 렌더링 -->
+            <div class="grid grid-cols-9 gap-1 mb-5" id="picker-grid"></div>
+
+            <!-- 액션 버튼 -->
+            <div class="flex gap-2">
+                <button onclick="checkMyNumbers()"
+                        id="check-btn"
+                        class="flex-1 py-3 bg-lotto-gold text-lotto-blue-dark font-bold rounded-xl text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-lotto-gold-light active:scale-95"
+                        disabled>
+                    당첨 확인하기
+                </button>
+                <button onclick="resetChecker()"
+                        class="px-4 py-3 bg-white/10 text-white/60 rounded-xl text-sm hover:bg-white/20 transition-all">
+                    초기화
+                </button>
+            </div>
+
+            <!-- 결과 표시 영역 -->
+            <div id="checker-result" class="hidden mt-4 rounded-xl p-5 text-center transition-all"></div>
+        </div>
+
+        <!-- 대상 회차 안내 -->
+        <p class="text-center text-white/20 text-xs mt-3">
+            제{{ current_draw.draw_no }}회 ({{ current_draw.draw_date }}) 기준 확인
+        </p>
     </div>
 </section>
 
@@ -512,6 +616,146 @@
 
 {% block extra_js %}
 <script>
+// ============================================
+// 내 번호 당첨 확인기
+// ============================================
+const WINNING_NUMBERS = {{ current_draw.winning_numbers|safe }};
+const BONUS_NUMBER = {{ current_draw.bonus_number }};
+const BALL_COLORS_MAP = {1:'#FFC107',11:'#2196F3',21:'#F44336',31:'#9E9E9E',41:'#4CAF50'};
+
+function getBallBg(n) {
+    if (n <= 10) return BALL_COLORS_MAP[1];
+    if (n <= 20) return BALL_COLORS_MAP[11];
+    if (n <= 30) return BALL_COLORS_MAP[21];
+    if (n <= 40) return BALL_COLORS_MAP[31];
+    return BALL_COLORS_MAP[41];
+}
+function getBallFg(n) { return n <= 10 ? '#333' : '#fff'; }
+
+let selectedNums = new Set();
+
+// 키패드 렌더링
+(function buildPicker() {
+    const grid = document.getElementById('picker-grid');
+    for (let i = 1; i <= 45; i++) {
+        const btn = document.createElement('button');
+        btn.id = `pick-${i}`;
+        btn.textContent = i;
+        btn.className = 'picker-btn aspect-square rounded-lg text-xs font-bold transition-all hover:scale-110 active:scale-95';
+        btn.style.background = 'rgba(255,255,255,0.08)';
+        btn.style.color = 'rgba(255,255,255,0.5)';
+        btn.onclick = () => togglePick(i);
+        grid.appendChild(btn);
+    }
+})();
+
+function togglePick(num) {
+    if (selectedNums.has(num)) {
+        selectedNums.delete(num);
+    } else {
+        if (selectedNums.size >= 6) return; // 최대 6개
+        selectedNums.add(num);
+    }
+    updatePickerUI();
+}
+
+function updatePickerUI() {
+    // 버튼 색상 업데이트
+    for (let i = 1; i <= 45; i++) {
+        const btn = document.getElementById(`pick-${i}`);
+        if (selectedNums.has(i)) {
+            btn.style.background = getBallBg(i);
+            btn.style.color = getBallFg(i);
+            btn.style.transform = 'scale(1.1)';
+            btn.style.boxShadow = `0 0 8px ${getBallBg(i)}80`;
+        } else {
+            btn.style.background = 'rgba(255,255,255,0.08)';
+            btn.style.color = 'rgba(255,255,255,0.5)';
+            btn.style.transform = '';
+            btn.style.boxShadow = '';
+        }
+    }
+
+    // 선택된 번호 표시
+    const display = document.getElementById('selected-display');
+    const hint = document.getElementById('empty-hint');
+    const checkBtn = document.getElementById('check-btn');
+    const sorted = [...selectedNums].sort((a, b) => a - b);
+
+    if (sorted.length === 0) {
+        display.innerHTML = '<span class="text-white/20 text-sm" id="empty-hint">번호를 선택하세요 (6개)</span>';
+    } else {
+        display.innerHTML = sorted.map(n =>
+            `<div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-md"
+                  style="background:${getBallBg(n)};color:${getBallFg(n)};">${n}</div>`
+        ).join('');
+    }
+
+    checkBtn.disabled = sorted.length !== 6;
+    // 결과 초기화
+    const result = document.getElementById('checker-result');
+    result.className = 'hidden mt-4 rounded-xl p-5 text-center transition-all';
+}
+
+function checkMyNumbers() {
+    const myNums = new Set(selectedNums);
+    const winSet = new Set(WINNING_NUMBERS);
+
+    const matchCount = [...myNums].filter(n => winSet.has(n)).length;
+    const hasBonus = myNums.has(BONUS_NUMBER);
+
+    let rank, emoji, bgClass, msg, prizeText;
+
+    if (matchCount === 6) {
+        rank = 1; emoji = '🏆'; bgClass = 'bg-lotto-gold/20 border border-lotto-gold/50';
+        prizeText = '1등 당첨!'; msg = '완벽한 6개 일치! 즉시 복권 판매점에서 확인하세요!';
+    } else if (matchCount === 5 && hasBonus) {
+        rank = 2; emoji = '🥈'; bgClass = 'bg-purple-500/20 border border-purple-500/40';
+        prizeText = '2등 당첨!'; msg = '5개 + 보너스 일치! 대단한 행운입니다!';
+    } else if (matchCount === 5) {
+        rank = 3; emoji = '🥉'; bgClass = 'bg-blue-500/20 border border-blue-500/40';
+        prizeText = '3등 당첨!'; msg = '5개 번호 일치! 축하드립니다!';
+    } else if (matchCount === 4) {
+        rank = 4; emoji = '🎉'; bgClass = 'bg-green-500/20 border border-green-500/40';
+        prizeText = '4등 당첨!'; msg = '4개 번호 일치! 5만원 당첨입니다!';
+    } else if (matchCount === 3) {
+        rank = 5; emoji = '😊'; bgClass = 'bg-teal-500/20 border border-teal-500/40';
+        prizeText = '5등 당첨!'; msg = '3개 번호 일치! 5천원 당첨입니다!';
+    } else {
+        rank = 0; emoji = '😔'; bgClass = 'bg-white/5 border border-white/10';
+        prizeText = '낙첨'; msg = `${matchCount}개 일치. 다음 회차에 다시 도전해보세요!`;
+    }
+
+    // 일치 번호 하이라이트
+    const sorted = [...selectedNums].sort((a, b) => a - b);
+    const ballsHtml = sorted.map(n => {
+        const isMatch = winSet.has(n);
+        const isBonus = n === BONUS_NUMBER;
+        const ring = isMatch ? 'ring-2 ring-white ring-offset-1 ring-offset-transparent' : 'opacity-40';
+        return `<div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-md ${ring}"
+                     style="background:${getBallBg(n)};color:${getBallFg(n)};">${n}</div>`;
+    }).join('');
+
+    const result = document.getElementById('checker-result');
+    result.className = `mt-4 rounded-xl p-5 text-center transition-all ${bgClass}`;
+    result.innerHTML = `
+        <div class="text-3xl mb-2">${emoji}</div>
+        <div class="text-xl font-bold mb-1 ${rank > 0 && rank <= 5 ? 'text-lotto-gold' : 'text-white/60'}">${prizeText}</div>
+        <p class="text-white/60 text-sm mb-4">${msg}</p>
+        <div class="flex justify-center gap-2 mb-4">${ballsHtml}</div>
+        <div class="text-xs text-white/30">${matchCount}개 일치${hasBonus && matchCount < 6 ? ' + 보너스 일치' : ''}</div>
+        ${rank > 0 && rank <= 5 ? '<a href="#ai-recommend" class="inline-block mt-3 px-5 py-2 bg-lotto-gold/30 text-lotto-gold rounded-full text-sm hover:bg-lotto-gold/50 transition-colors">다음 회차 번호 추천 받기 →</a>' : '<button onclick="resetChecker()" class="mt-3 px-5 py-2 bg-white/10 text-white/50 rounded-full text-sm hover:bg-white/20 transition-colors">다시 확인하기</button>'}
+    `;
+}
+
+function resetChecker() {
+    selectedNums.clear();
+    updatePickerUI();
+    const result = document.getElementById('checker-result');
+    result.className = 'hidden mt-4 rounded-xl p-5 text-center';
+    result.innerHTML = '';
+}
+
 // ============================================
 // 카운트다운 타이머 (다음 토요일 20:45 KST - 동행복권 동기화)
 // ============================================

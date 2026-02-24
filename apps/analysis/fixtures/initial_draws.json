@@ -25429,5 +25429,26 @@
     "total_sales": 0,
     "created_at": "2026-02-19T12:13:04.114Z"
   }
+},
+{
+  "model": "analysis.drawresult",
+  "pk": 1212,
+  "fields": {
+    "draw_no": 1212,
+    "draw_date": "2026-02-21",
+    "number_1": 5,
+    "number_2": 8,
+    "number_3": 25,
+    "number_4": 31,
+    "number_5": 41,
+    "number_6": 44,
+    "bonus_number": 45,
+    "first_prize_amount": 31800000000,
+    "first_prize_winners": 12,
+    "second_prize_amount": 0,
+    "second_prize_winners": 0,
+    "total_sales": 0,
+    "created_at": "2026-02-24T10:17:34.559Z"
+  }
 }
 ]
